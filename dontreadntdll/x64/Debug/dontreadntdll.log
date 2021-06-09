@@ -1,0 +1,13 @@
+﻿  main.c
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(39,22): warning C4013: 'RtlInitUnicodeString' undefined; assuming extern returning int
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(53,78): warning C4047: '=': 'NTSTATUS (__cdecl *)(PHANDLE,ACCESS_MASK,POBJECT_ATTRIBUTES,PIO_STATUS_BLOCK,PLARGE_INTEGER,ULONG,ULONG,ULONG,ULONG,PVOID,ULONG)' differs in levels of indirection from 'char *'
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(28,1): warning C4047: 'initializing': 'DWORD' differs in levels of indirection from 'void *'
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(29,1): warning C4047: 'initializing': 'DWORD' differs in levels of indirection from 'void *'
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(35,1): warning C4047: 'initializing': 'NTSTATUS' differs in levels of indirection from 'void *'
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(51,1): warning C4047: 'initializing': 'LPVOID' differs in levels of indirection from 'DWORD_PTR'
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(24,7): warning C4101: 'syscallStub': unreferenced local variable
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(90,22): warning C4047: 'return': 'char *' differs in levels of indirection from 'char (*)[30]'
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(87,1): warning C4047: 'initializing': 'DWORD' differs in levels of indirection from 'void *'
+C:\Users\pcuser\source\repos\hidingyoursyscalls\dontreadntdll\main.c(90): warning C4172: returning address of local variable or temporary: finalSyscall
+main.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
+  dontreadntdll.vcxproj -> C:\Users\pcuser\source\repos\hidingyoursyscalls\x64\Debug\dontreadntdll.exe

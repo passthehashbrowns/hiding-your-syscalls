@@ -12,11 +12,11 @@
 #include "offsets.h"
 
 #pragma comment (lib, "Dbghelp.lib")
+#pragma comment(lib, "ntdll")
 
 int const SYSCALL_STUB_SIZE = 23;
 
 char* createObfuscatedSyscall(LPVOID SyscallFunction, LPVOID ntdllSyscallFunction);
-BOOL resetNtdllProtection(LPVOID ntdllPointer, DWORD protection);
 
 
 int main(int argc, char* argv[]) {
@@ -34,24 +34,21 @@ int main(int argc, char* argv[]) {
 	HANDLE fileHandle = NULL;
 	NTSTATUS status = NULL;
 	UNICODE_STRING fileName;
-	_RtlInitUnicodeString RtlInitUnicodeString = (_RtlInitUnicodeString)
-		GetProcAddress(GetModuleHandle(L"ntdll.dll"), "RtlInitUnicodeString");
-	RtlInitUnicodeString(&fileName, (PCWSTR)L"\\??\\c:\\temp\\temp.log");
+	//_RtlInitUnicodeString RtlInitUnicodeString = (_RtlInitUnicodeString)
+//		GetProcAddress(GetModuleHandle(L"ntdll.dll"), "RtlInitUnicodeString");
+	RtlInitUnicodeString(&fileName, (PCWSTR)L"\\??\\c:\\users\\pcuser\\source\\repos\\hidingyoursyscalls\\x64\\Debug\\temp.log");
 	IO_STATUS_BLOCK osb;
 	ZeroMemory(&osb, sizeof(IO_STATUS_BLOCK));
 	InitializeObjectAttributes(&oa, &fileName, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
 
-
+	
 	//Get NTDLL address
-	HANDLE process = GetCurrentProcess();
-	MODULEINFO mi;
-	HMODULE ntdllModule = GetModuleHandleA("ntdll.dll");
-	GetModuleInformation(process, ntdllModule, &mi, sizeof(mi));
-	LPVOID ntdllBase = mi.lpBaseOfDll;
+	LPVOID ntdllBase = get_module_by_name(L"ntdll.dll");
+	//GetModuleInformation(process, ntdllModule, &mi, sizeof(mi));
+	//LPVOID ntdllBase = mi.lpBaseOfDll;
 
-
-	LPVOID ntdllSyscallPointer = (DWORD_PTR)ntdllBase + NtAcceptConnectPortOffset;
+	LPVOID ntdllSyscallPointer = (DWORD_PTR)ntdllBase + NtOpenTimerOffset;
 	//Modify our NtCreateFile syscall
 	NtCreateFile = createObfuscatedSyscall(&NtCreateFile10, ntdllSyscallPointer);
 
@@ -68,9 +65,7 @@ int main(int argc, char* argv[]) {
 
 
 char* createObfuscatedSyscall(LPVOID SyscallFunction, LPVOID ntdllSyscallPointer) {
-	//Get our syscall stub
-	char asmBuf[23];
-	memcpy(asmBuf, SyscallFunction, 23);
+
 	//Get the address of the syscall instruction
 	LPVOID syscallAddress = (char*)ntdllSyscallPointer + 18;
 
@@ -83,7 +78,7 @@ char* createObfuscatedSyscall(LPVOID SyscallFunction, LPVOID ntdllSyscallPointer
 
 	//Copy it all into a final buffer
 	char finalSyscall[30];
-	memcpy(finalSyscall, asmBuf, 7);
+	memcpy(finalSyscall, SyscallFunction, 7);
 	memcpy(finalSyscall + 7, jumpPrelude, 3);
 	memcpy(finalSyscall + 7 + 3, jumpAddress, sizeof(jumpAddress));
 	memcpy(finalSyscall + 7 + 3 + 8, jumpEpilogue, 4);
@@ -95,10 +90,3 @@ char* createObfuscatedSyscall(LPVOID SyscallFunction, LPVOID ntdllSyscallPointer
 	return &finalSyscall;
 }
 
-//Restore the NTDLL syscall stub to the previous protection
-BOOL resetNtdllProtection(LPVOID ntdllPointer, DWORD protection) {
-	DWORD oldProtect = NULL;
-	BOOL bSuccess = VirtualProtectEx(GetCurrentProcess(), ntdllPointer, SYSCALL_STUB_SIZE, protection, oldProtect);
-	return bSuccess;
-
-}

@@ -62,3 +62,91 @@ typedef void (WINAPI* _RtlInitUnicodeString)(
 	PUNICODE_STRING DestinationString,
 	PCWSTR SourceString
 	);
+
+#ifndef TO_LOWERCASE
+#define TO_LOWERCASE(out, c1) (out = (c1 <= 'Z' && c1 >= 'A') ? c1 = (c1 - 'A') + 'a': c1)
+#endif
+
+typedef struct _PEB_LDR_DATA
+{
+    ULONG Length;
+    BOOLEAN Initialized;
+    HANDLE SsHandle;
+    LIST_ENTRY InLoadOrderModuleList;
+    LIST_ENTRY InMemoryOrderModuleList;
+    LIST_ENTRY InInitializationOrderModuleList;
+    PVOID      EntryInProgress;
+
+} PEB_LDR_DATA, * PPEB_LDR_DATA;
+
+//here we don't want to use any functions imported form extenal modules
+
+typedef struct _LDR_DATA_TABLE_ENTRY {
+    LIST_ENTRY  InLoadOrderModuleList;
+    LIST_ENTRY  InMemoryOrderModuleList;
+    LIST_ENTRY  InInitializationOrderModuleList;
+    void* BaseAddress;
+    void* EntryPoint;
+    ULONG   SizeOfImage;
+    UNICODE_STRING FullDllName;
+    UNICODE_STRING BaseDllName;
+    ULONG   Flags;
+    SHORT   LoadCount;
+    SHORT   TlsIndex;
+    HANDLE  SectionHandle;
+    ULONG   CheckSum;
+    ULONG   TimeDateStamp;
+} LDR_DATA_TABLE_ENTRY, * PLDR_DATA_TABLE_ENTRY;
+
+
+typedef struct _PEB
+{
+    BOOLEAN InheritedAddressSpace;
+    BOOLEAN ReadImageFileExecOptions;
+    BOOLEAN BeingDebugged;
+    BOOLEAN SpareBool;
+    HANDLE Mutant;
+
+    PVOID ImageBaseAddress;
+    PPEB_LDR_DATA Ldr;
+
+    // [...] this is a fragment, more elements follow here
+
+} PEB, * PPEB;
+
+
+
+inline LPVOID get_module_by_name(WCHAR* module_name)
+{
+    PPEB peb = NULL;
+#if defined(_WIN64)
+    peb = (PPEB)__readgsqword(0x60);
+#else
+    peb = (PPEB)__readfsdword(0x30);
+#endif
+    PPEB_LDR_DATA ldr = peb->Ldr;
+    LIST_ENTRY list = ldr->InLoadOrderModuleList;
+
+    PLDR_DATA_TABLE_ENTRY Flink = *((PLDR_DATA_TABLE_ENTRY*)(&list));
+    PLDR_DATA_TABLE_ENTRY curr_module = Flink;
+
+    while (curr_module != NULL && curr_module->BaseAddress != NULL) {
+        if (curr_module->BaseDllName.Buffer == NULL) continue;
+        WCHAR* curr_name = curr_module->BaseDllName.Buffer;
+
+        size_t i = 0;
+        for (i = 0; module_name[i] != 0 && curr_name[i] != 0; i++) {
+            WCHAR c1, c2;
+            TO_LOWERCASE(c1, module_name[i]);
+            TO_LOWERCASE(c2, curr_name[i]);
+            if (c1 != c2) break;
+        }
+        if (module_name[i] == 0 && curr_name[i] == 0) {
+            //found
+            return curr_module->BaseAddress;
+        }
+        // not found, try next:
+        curr_module = (PLDR_DATA_TABLE_ENTRY)curr_module->InLoadOrderModuleList.Flink;
+    }
+    return NULL;
+}
