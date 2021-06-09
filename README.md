@@ -2,7 +2,7 @@
 
 
 ## What is this?
-This repository contains all of the source code from my blog post about avoiding direct syscall detections, which you can find [here](https://passthehashbrowns.github.io/hiding-your-syscall).
+This repository contains all of the source code from my blog post about avoiding direct syscall detections, which you can find [here](https://passthehashbrowns.github.io/hiding-your-syscalls).
 
 The original detection that I wrote focused around locating a syscall instruction and determining whether or not it came from within the loaded copy of NTDLL. If it did not, then it may indicate direct syscall use. To bypass this detection, I patch the syscall stub with a jmp instruction to a legitimate syscall instruction inside of NTDLL. This means that the syscall comes from within NTDLL and then returns control to our code like normal.
 
