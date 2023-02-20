@@ -118,17 +118,16 @@ void createObfuscatedSyscall(LPVOID SyscallFunction, LPVOID ntdllSyscallPointer)
 	unsigned char jumpPrelude[] = { 0x49, 0xBB }; //mov r11
 	unsigned char jumpAddress[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF }; //placeholder where the address goes
 	*(void**)(jumpAddress) = syscallAddress; //replace the address
-	unsigned char jumpEpilogue[] = { 0x41, 0xFF, 0xE3 , 0xC3 }; //jmp r11
+	unsigned char jumpEpilogue[] = { 0x41, 0xFF, 0xE3 }; //jmp r11
 
 	DWORD oldProtect = NULL;
-	VirtualProtectEx(GetCurrentProcess(), SyscallFunction, 61 + 2 + 8 + 4, PAGE_READWRITE, &oldProtect);
+	VirtualProtectEx(GetCurrentProcess(), SyscallFunction, 61 + 2 + 8 + 3, PAGE_EXECUTE_READWRITE, &oldProtect);
 
 	memcpy((char*)SyscallFunction + 61, jumpPrelude, 2);
 	memcpy((char*)SyscallFunction + 61 + 2, jumpAddress, sizeof(jumpAddress));
-	memcpy((char*)SyscallFunction + 61 + 2 + 8, jumpEpilogue, 4);
+	memcpy((char*)SyscallFunction + 61 + 2 + 8, jumpEpilogue, 3);
 
-	VirtualProtectEx(GetCurrentProcess(), SyscallFunction, 61 + 2 + 8 + 4, oldProtect, &oldProtect);
-
+	VirtualProtectEx(GetCurrentProcess(), SyscallFunction, 61 + 2 + 8 + 3, oldProtect, &oldProtect);
 
 }
 
